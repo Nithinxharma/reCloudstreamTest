@@ -12,9 +12,10 @@
 
             android:foreground="?android:attr/selectableItemBackgroundBorderless"
             android:id="@+id/home_expanded_drag_down"
-            android:padding="12dp"
+            android:padding="14dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:background="@drawable/prismal_glass_surface">
 
         <requestFocus />
 
