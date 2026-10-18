@@ -1,0 +1,193 @@
+
+name: CloudStream Android Build
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudstream-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and Diagnose Android App
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set Up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set Up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Prepare Build Environment
+        shell: bash
+        run: |
+          mkdir -p build-logs diagnostics
+          chmod +x ./gradlew
+
+          {
+            echo "Repository: $GITHUB_REPOSITORY"
+            echo "Branch: $GITHUB_REF_NAME"
+            echo "Commit: $GITHUB_SHA"
+            echo "Event: $GITHUB_EVENT_NAME"
+            echo "Runner OS: $RUNNER_OS"
+            echo "Java:"
+            java -version 2>&1
+            echo "Gradle:"
+            ./gradlew --version
+            echo "Android SDK: ${ANDROID_HOME:-not-set}"
+            echo "SDKMANAGER SDK: ${ANDROID_SDK_ROOT:-not-set}"
+            echo "Disk space:"
+            df -h
+            echo "Memory:"
+            free -h
+            echo "Git status:"
+            git status --short --branch
+            echo "Gradle modules:"
+            find . -name build.gradle.kts -o -name build.gradle
+          } > diagnostics/environment.txt 2>&1
+
+      - name: Verify Gradle Wrapper
+        shell: bash
+        run: |
+          ./gradlew --version \
+            2>&1 | tee build-logs/gradle-wrapper.log
+
+      - name: Build Debug APK, Run Lint and Tests
+        id: build
+        shell: bash
+        run: |
+          set +e
+
+          echo "Starting CloudStream build..."
+          echo "Command: ./gradlew assemblePrereleaseDebug lint check"
+
+          ./gradlew \
+            assemblePrereleaseDebug \
+            lint \
+            check \
+            --stacktrace \
+            --info \
+            --warning-mode all \
+            --no-daemon \
+            2>&1 | tee build-logs/gradle-build.log
+
+          BUILD_EXIT=${PIPESTATUS[0]}
+
+          echo "exit_code=$BUILD_EXIT" >> "$GITHUB_OUTPUT"
+          echo "Build exit code: $BUILD_EXIT"
+
+          exit "$BUILD_EXIT"
+
+      - name: Collect Build Diagnostics
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p diagnostics
+
+          {
+            echo "Workflow: $GITHUB_WORKFLOW"
+            echo "Repository: $GITHUB_REPOSITORY"
+            echo "Commit: $GITHUB_SHA"
+            echo "Ref: $GITHUB_REF"
+            echo "Run ID: $GITHUB_RUN_ID"
+            echo "Run attempt: $GITHUB_RUN_ATTEMPT"
+            echo "Runner: $RUNNER_OS"
+            echo "Date (UTC): $(date -u)"
+            echo
+            echo "Git status:"
+            git status --short --branch
+            echo
+            echo "Disk space:"
+            df -h
+            echo
+            echo "Memory:"
+            free -h
+          } > diagnostics/build-environment.txt 2>&1
+
+          {
+            echo "Gradle and Android build files"
+            find . \
+              \( -path './.git' -o -path './.gradle' \) -prune \
+              -o \( -name 'build.gradle' \
+                    -o -name 'build.gradle.kts' \
+                    -o -name 'settings.gradle' \
+                    -o -name 'settings.gradle.kts' \
+                    -o -name 'gradle-wrapper.properties' \) \
+              -type f -print
+          } > diagnostics/gradle-files.txt 2>&1
+
+          find . -type f \
+            \( -name 'problems-report.html' \
+               -o -name 'TEST-*.xml' \
+               -o -name '*lint-results*.html' \
+               -o -name '*lint-results*.xml' \) \
+            -not -path './.git/*' \
+            -print > diagnostics/report-index.txt 2>/dev/null || true
+
+          {
+            echo "## CloudStream Build Diagnostics"
+            echo
+            echo "- Repository: \`$GITHUB_REPOSITORY\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Branch: \`$GITHUB_REF_NAME\`"
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo
+            echo "### APK outputs"
+            find app/build/outputs/apk -type f -name '*.apk' \
+              -print 2>/dev/null || true
+            echo
+            echo "### Gradle reports"
+            cat diagnostics/report-index.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload APK Artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cloudstream-apk-${{ github.run_number }}
+          path: |
+            app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Complete Build Logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cloudstream-build-logs-${{ github.run_number }}
+          path: |
+            build-logs/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Gradle Reports and Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cloudstream-gradle-reports-${{ github.run_number }}
+          path: |
+            **/build/reports/**
+            **/build/test-results/**
+            **/build/outputs/androidTest-results/**
+            diagnostics/**
+          if-no-files-found: warn
+          retention-days: 14
