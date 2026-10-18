@@ -1,5 +1,7 @@
 package com.lagradost.cloudstream3.ui.home
 
+import android.graphics.drawable.GradientDrawable
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
@@ -126,6 +128,9 @@ open class ParentItemAdapter(
                 nextRight = endFocus,
             )
             homeChildMoreInfo.text = info.name
+            stylePremiumSectionTitle(homeChildMoreInfo)
+            homeChildRecyclerview.clipToPadding = false
+            homeChildRecyclerview.overScrollMode = View.OVER_SCROLL_NEVER
 
             homeChildRecyclerview.addOnScrollListener(object :
                 RecyclerView.OnScrollListener() {
@@ -191,3 +196,21 @@ open class ParentItemAdapter(
 inline fun <reified T> Bundle.getSafeParcelable(key: String): T? =
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) getParcelable(key)
     else getParcelable(key, T::class.java)
+
+private fun stylePremiumSectionTitle(view: View) {
+    val density = resources.displayMetrics.density
+    view.background = GradientDrawable().apply {
+        shape = GradientDrawable.RECTANGLE
+        cornerRadius = 10f * density
+        setColor(Color.argb(28, 255, 255, 255))
+        setStroke((1f * density).toInt().coerceAtLeast(1), Color.argb(26, 255, 255, 255))
+    }
+    view.elevation = 1.5f * density
+    if (view is android.widget.TextView) {
+        view.letterSpacing = 0.015f
+        view.setPadding(
+            (12f * density).toInt(), (9f * density).toInt(),
+            (12f * density).toInt(), (9f * density).toInt()
+        )
+    }
+}

@@ -1,5 +1,7 @@
 package com.lagradost.cloudstream3.ui.home
 
+import android.graphics.drawable.GradientDrawable
+import android.graphics.Color
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -187,14 +189,49 @@ open class HomeChildItemAdapter(
         }
     }
 
+    private fun applyPremiumPosterStyle(view: View) {
+        val density = view.resources.displayMetrics.density
+        view.elevation = 5f * density
+        view.clipToOutline = true
+        view.stateListAnimator = null
+        view.setOnFocusChangeListener { focusedView, hasFocus ->
+            if (!isLayout(TV or EMULATOR)) return@setOnFocusChangeListener
+            focusedView.animate().cancel()
+            focusedView.animate()
+                .scaleX(if (hasFocus) 1.035f else 1f)
+                .scaleY(if (hasFocus) 1.035f else 1f)
+                .translationZ(if (hasFocus) 6f * density else 0f)
+                .setDuration(140L)
+                .start()
+        }
+    }
+
+    private fun applyPremiumTitleStyle(view: View) {
+        val density = view.resources.displayMetrics.density
+        view.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 8f * density
+            setColor(Color.argb(205, 16, 20, 30))
+            setStroke((1f * density).toInt().coerceAtLeast(1), Color.argb(35, 255, 255, 255))
+        }
+        view.setPadding(
+            (7f * density).toInt(), (4f * density).toInt(),
+            (7f * density).toInt(), (4f * density).toInt()
+        )
+    }
+
     protected fun applyBinding(holder: ViewHolderState<Boolean>, isFirstItem: Boolean) {
         when (val binding = holder.view) {
             is HomeResultGridBinding -> {
                 updateLayoutParms(binding.backgroundCard, setWidth, setHeight)
+                applyPremiumPosterStyle(binding.backgroundCard)
+                applyPremiumTitleStyle(binding.imageText)
             }
 
             is HomeResultGridExpandedBinding -> {
                 updateLayoutParms(binding.backgroundCard, setWidth, setHeight)
+                applyPremiumPosterStyle(binding.backgroundCard)
+                applyPremiumTitleStyle(binding.imageText)
 
                 if (isFirstItem) { // to fix tv
                     binding.backgroundCard.nextFocusLeftId = R.id.nav_rail_view
