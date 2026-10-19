@@ -211,15 +211,9 @@ class SettingsPlayer : BasePreferenceFragmentCompat() {
                 (player.name.asStringNull(activity) ?: player::class.simpleName)?.let { player to it }
             }
 
-            val prefNames = buildList {
-                add(getString(R.string.player_settings_play_in_app)) // built-in player display name
-                addAll(players.map { (_, name) -> name })
-            }
-
-            val prefValues = buildList {
-                add("") // "" = built-in player, matches default
-                addAll(players.map { (player, _) -> player.uniqueId() })
-            }
+            val prefNames = players.map { (_, name) -> name }
+            val prefValues = players.map { (player, _) -> player.uniqueId() }
+            if (prefValues.isEmpty()) return@setOnPreferenceClickListener true
 
             val current = settingsManager.getString(getString(R.string.player_default_key), "") ?: ""
             activity?.showBottomDialog(

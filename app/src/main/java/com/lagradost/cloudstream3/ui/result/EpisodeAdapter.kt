@@ -87,7 +87,7 @@ class EpisodeAdapter(
             val playerPref =
                 settingsManager.getString(context.getString(R.string.player_default_key), "")
 
-            return VideoClickActionHolder.uniqueIdToId(playerPref) ?: ACTION_PLAY_EPISODE_IN_PLAYER
+            return VideoClickActionHolder.uniqueIdToId(playerPref) ?: (VideoClickActionHolder.allVideoClickActions.indexOfFirst { it is com.lagradost.cloudstream3.actions.AlwaysAskAction } + 1000).takeIf { it >= 1000 } ?: ACTION_SHOW_OPTIONS
         }
 
         val sharedPool =

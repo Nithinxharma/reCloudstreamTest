@@ -1368,7 +1368,6 @@ class ResultViewModel2 : ViewModel() {
                     )
                 }
 
-                options.add(txt(R.string.episode_action_play_in_app) to ACTION_PLAY_EPISODE_IN_PLAYER)
                 options.addAll(
                     listOf(
                         txt(R.string.episode_action_auto_download) to ACTION_DOWNLOAD_EPISODE,
@@ -1612,13 +1611,11 @@ class ResultViewModel2 : ViewModel() {
                         val players = VideoClickActionHolder.getPlayers(ctx)
                         val options = mutableListOf<Pair<UiText, Int>>()
 
-                        // Add internal player option
-                        options.add(txt(R.string.episode_action_play_in_app) to ACTION_PLAY_EPISODE_IN_PLAYER)
-
                         // Add external player options 
-                        options.addAll(players.filter { it !is AlwaysAskAction }.map { player ->
-                            player.name to (VideoClickActionHolder.uniqueIdToId(player.uniqueId())
-                                ?: ACTION_PLAY_EPISODE_IN_PLAYER)
+                        options.addAll(players.filter { it !is AlwaysAskAction }.mapNotNull { player ->
+                            VideoClickActionHolder.uniqueIdToId(player.uniqueId())?.let { actionId ->
+                                player.name to actionId
+                            }
                         })
 
                         postPopup(
