@@ -4,12 +4,15 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:background="@drawable/account_glass_panel">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/account_list"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:background="?attr/primaryBlackBackground"
+        android:background="@drawable/account_glass_panel"
+        android:paddingVertical="6dp"
         tools:listitem="@layout/account_single"
         android:layout_width="match_parent"
         android:layout_rowWeight="1"
@@ -19,6 +22,7 @@
     <TextView
         android:id="@+id/account_none"
         android:text="@string/no_account"
+        android:background="@drawable/account_glass_row"
         style="@style/SettingsItem"
         android:focusable="true">
     </TextView>
@@ -26,6 +30,7 @@
     <TextView
         android:id="@+id/account_add"
         android:text="@string/add_account"
+        android:background="@drawable/account_glass_row"
         style="@style/SettingsItem"
         android:focusable="true">
 

@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
 
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/glass_panel_background">
 
 
     <LinearLayout
@@ -24,7 +25,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="@dimen/rounded_image_radius">
+                app:cardCornerRadius="@dimen/rounded_image_radius"
+                app:cardElevation="6dp">
 
                 <ImageView
                     android:id="@+id/resultview_preview_poster"

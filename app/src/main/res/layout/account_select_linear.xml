@@ -5,7 +5,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="12dp"
+    android:background="@drawable/account_glass_panel">
 
     <TextView
         android:paddingStart="?android:attr/listPreferredItemPaddingStart"
@@ -23,7 +25,9 @@
         android:id="@+id/account_recycler_view"
         android:orientation="horizontal"
         android:descendantFocusability="afterDescendants"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="12dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clipChildren="false"

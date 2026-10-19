@@ -13,7 +13,9 @@
     android:clickable="true"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:defaultFocusHighlightEnabled="false">
+    android:defaultFocusHighlightEnabled="false"
+    android:padding="4dp"
+    android:background="@drawable/account_glass_item">
 
     <FrameLayout
         android:layout_width="wrap_content"
@@ -31,7 +33,8 @@
             android:foreground="@drawable/rounded_outline"
             android:duplicateParentState="true"
             app:cardCornerRadius="100dp"
-            app:cardElevation="0dp">
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#CC252B38">
 
             <ImageView
                 android:id="@+id/account_image"
@@ -69,6 +72,11 @@
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:background="@drawable/account_glass_caption"
         android:gravity="center"
         android:maxLines="2"
         android:ellipsize="end"

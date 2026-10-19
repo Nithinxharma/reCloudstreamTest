@@ -19,6 +19,7 @@
         android:maxWidth="220dp"
         android:maxHeight="220dp"
         app:cardCornerRadius="@dimen/rounded_image_radius"
+         app:cardElevation="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1"
         app:layout_constraintEnd_toEndOf="parent"

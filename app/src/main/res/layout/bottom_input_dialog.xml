@@ -4,7 +4,8 @@
     android:nextFocusDown="@id/nginx_text_input"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@drawable/glass_panel_background">
 
     <TextView
         android:id="@+id/text1"
