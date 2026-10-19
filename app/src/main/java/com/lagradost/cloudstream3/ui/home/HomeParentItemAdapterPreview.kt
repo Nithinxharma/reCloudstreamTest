@@ -1,7 +1,5 @@
 package com.lagradost.cloudstream3.ui.home
 
-import android.graphics.drawable.GradientDrawable
-import android.graphics.Color
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
@@ -385,8 +383,6 @@ class HomeParentItemAdapterPreview(
                 }
 
                 homePreviewText.text = item.name.html()
-                homePreviewText.setShadowLayer(8f, 0f, 2f, Color.BLACK)
-                stylePremiumAction(homePreviewInfoBtt)
                 populateChips(
                     homePreviewTags,
                     item.tags?.take(6) ?: emptyList(),
@@ -413,10 +409,6 @@ class HomeParentItemAdapterPreview(
             }
             (binding as? FragmentHomeHeadBinding)?.apply {
                 //homePreviewImage.setImage(item.posterUrl, item.posterHeaders)
-                homePreviewText.setShadowLayer(8f, 0f, 2f, Color.BLACK)
-                stylePremiumAction(homePreviewPlay)
-                stylePremiumAction(homePreviewInfo)
-                stylePremiumAction(homePreviewBookmark)
 
                 homePreviewPlay.setOnClickListener { view ->
                     viewModel.click(
@@ -512,28 +504,10 @@ class HomeParentItemAdapterPreview(
 
         private val toggleListHolder: ChipGroup? = itemView.findViewById(R.id.home_type_holder)
 
-        private fun stylePremiumAction(view: View) {
-            val density = view.resources.displayMetrics.density
-            view.background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = 14f * density
-                setColor(Color.argb(34, 255, 255, 255))
-                setStroke((1f * density).toInt().coerceAtLeast(1), Color.argb(48, 255, 255, 255))
-            }
-            view.elevation = 2f * density
-            view.clipToOutline = true
-            view.minimumHeight = (40f * density).toInt()
-        }
-
         fun bind() = Unit
 
         init {
             previewViewpager.setPageTransformer(HomeScrollTransformer())
-            previewViewpager.clipToPadding = false
-            resumeRecyclerView.clipToPadding = false
-            bookmarkRecyclerView.clipToPadding = false
-            resumeRecyclerView.overScrollMode = View.OVER_SCROLL_NEVER
-            bookmarkRecyclerView.overScrollMode = View.OVER_SCROLL_NEVER
 
             previewViewpager.adapter = previewAdapter
             resumeRecyclerView.adapter = resumeAdapter

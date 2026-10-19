@@ -1,7 +1,5 @@
 package com.lagradost.cloudstream3.ui.home
 
-import android.graphics.drawable.GradientDrawable
-import android.graphics.Color
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -674,18 +672,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
         configEvent.invoke()
     }
 
-    private fun stylePremiumHomeAction(view: View) {
-        val density = view.resources.displayMetrics.density
-        view.background = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = 18f * density
-            setColor(Color.argb(38, 255, 255, 255))
-            setStroke((1f * density).toInt().coerceAtLeast(1), Color.argb(46, 255, 255, 255))
-        }
-        view.elevation = 3f * density
-        view.clipToOutline = true
-    }
-
     @SuppressLint("SetTextI18n")
     override fun onBindingCreated(binding: FragmentHomeBinding) {
         context?.let { HomeChildItemAdapter.updatePosterSize(it) }
@@ -693,13 +679,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             handleTvBackPress(this)
         }
         binding.apply {
-            stylePremiumHomeAction(homeApiFab)
-            stylePremiumHomeAction(homeChangeApi)
-            stylePremiumHomeAction(homePreviewReloadProvider)
-            stylePremiumHomeAction(homePreviewSearchButton)
-            stylePremiumHomeAction(homePreviewSettingsButton)
-            homeMasterRecycler.clipToPadding = false
-            homeMasterRecycler.overScrollMode = View.OVER_SCROLL_NEVER
             //homeChangeApiLoading.setOnClickListener(apiChangeClickListener)
             //homeChangeApiLoading.setOnClickListener(apiChangeClickListener)
             homeApiFab.setOnClickListener(apiChangeClickListener)

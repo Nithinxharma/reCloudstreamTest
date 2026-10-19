@@ -1,6 +1,5 @@
 package com.lagradost.cloudstream3.ui.home
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,17 +60,11 @@ class HomeScrollAdapter(
             is HomeScrollViewBinding -> {
                 binding.homeScrollPreview.loadImage(posterUrl, item.posterHeaders)
                 binding.homeScrollPreviewTags.apply {
-                    text = item.tags?.joinToString("  •  ") ?: ""
+                    text = item.tags?.joinToString(" • ") ?: ""
                     isGone = item.tags.isNullOrEmpty()
                     maxLines = 2
-                    alpha = 0.92f
-                    setShadowLayer(4f, 0f, 1f, Color.BLACK)
                 }
-                binding.homeScrollPreviewTitle.apply {
-                    text = item.name.html()
-                    setShadowLayer(10f, 0f, 2f, Color.BLACK)
-                    letterSpacing = 0.01f
-                }
+                binding.homeScrollPreviewTitle.text = item.name.html()
 
                 bindLogo(
                     url = item.logoUrl,
@@ -83,7 +76,6 @@ class HomeScrollAdapter(
 
             is HomeScrollViewTvBinding -> {
                 binding.homeScrollPreview.isFocusable = false
-                binding.homeScrollPreview.isClickable = true
                 binding.homeScrollPreview.setOnClickListener { view ->
                     callback.invoke(view ?: return@setOnClickListener, position, item)
                 }
