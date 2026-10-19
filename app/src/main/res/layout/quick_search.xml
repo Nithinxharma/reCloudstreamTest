@@ -7,7 +7,7 @@
     style="@style/DarkFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/primaryGrayBackground"
+    android:background="@drawable/glass_panel_background"
     android:orientation="vertical">
 
     <LinearLayout
@@ -21,7 +21,7 @@
             android:layout_width="25dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/glass_icon_button_background"
             android:foregroundGravity="center"
             android:src="@drawable/ic_baseline_arrow_back_24"
             android:visibility="gone"
@@ -33,7 +33,7 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="10dp"
-            android:background="@drawable/search_background">
+            android:background="@drawable/glass_input_background">
 
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/quick_search"

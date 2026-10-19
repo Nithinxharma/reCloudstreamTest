@@ -7,6 +7,6 @@
         android:layout_gravity="center"
         android:gravity="center"
         tools:src="@drawable/ic_anilist_icon"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:background="@drawable/glass_icon_button_background"
         app:tint="?attr/white">
 </ImageView>

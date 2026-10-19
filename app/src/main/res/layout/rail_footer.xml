@@ -15,7 +15,7 @@
         android:id="@+id/nav_footer_profile_card"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:background="@color/transparent"
+        android:background="@drawable/glass_icon_button_background"
         android:focusable="true"
         android:foreground="@drawable/outline_drawable_round_20"
         android:nextFocusUp="@id/navigation_settings"

@@ -8,7 +8,7 @@
 
     android:clickable="true"
     android:focusable="true"
-    android:foreground="@drawable/outline_drawable"
+    android:foreground="@drawable/glass_item_background"
     android:orientation="vertical">
 
     <androidx.cardview.widget.CardView
@@ -18,7 +18,7 @@
         android:layout_margin="2dp"
         android:layout_marginBottom="2dp"
         android:elevation="10dp"
-        app:cardBackgroundColor="?attr/primaryGrayBackground"
+        app:cardBackgroundColor="#B81A2330"
         app:cardCornerRadius="@dimen/rounded_image_radius">
 
         <ImageView

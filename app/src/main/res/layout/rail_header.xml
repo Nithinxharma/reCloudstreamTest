@@ -11,6 +11,8 @@
             android:id="@+id/nav_header_notification"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:padding="5dp"
+            android:background="@drawable/glass_icon_button_background"
             app:itemIconTint="@color/item_select_color"
             android:focusable="true"
             android:nextFocusRight="@id/home_preview_info_btt"

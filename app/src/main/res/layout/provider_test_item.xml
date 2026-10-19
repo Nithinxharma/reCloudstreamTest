@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackground"
+    android:background="@drawable/glass_item_background"
     android:nextFocusRight="@id/action_button"
     android:orientation="horizontal"
     android:padding="12dp">
@@ -62,7 +62,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|end"
         android:layout_marginStart="10dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:background="@drawable/glass_icon_button_background"
         android:clickable="true"
         android:focusable="true"
         android:padding="12dp"
