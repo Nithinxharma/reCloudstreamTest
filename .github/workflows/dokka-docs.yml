@@ -1,0 +1,237 @@
+CloudStream Dokka Documentation Workflow
+
+Generates HTML API documentation and Git history reports only.
+
+Does not build APKs, AARs, or publish releases.
+
+name: Dokka Full Documentation
+
+on:
+workflow_dispatch:
+push:
+branches:
+- master
+- main
+workflow_call:
+
+permissions:
+contents: read
+
+concurrency:
+group: dokka-docs-${{ github.ref }}
+cancel-in-progress: true
+
+jobs:
+dokka-documentation:
+name: Generate Documentation and Full Git History
+runs-on: ubuntu-latest
+timeout-minutes: 60
+
+steps:
+  - name: Checkout Complete Repository History
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+      submodules: recursive
+
+  - name: Set Up Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
+
+  - name: Set Up Gradle
+    uses: gradle/actions/setup-gradle@v4
+
+  - name: Verify Repository and Gradle Wrapper
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      echo "Repository: $GITHUB_REPOSITORY"
+      echo "Current commit: $(git rev-parse HEAD)"
+      echo "First commit: $(git rev-list --max-parents=0 HEAD | head -n 1)"
+      echo "Total commits: $(git rev-list --count HEAD)"
+
+      if [ ! -f ./gradlew ]; then
+        echo "::error::Gradle wrapper not found in repository root."
+        exit 1
+      fi
+
+      chmod +x ./gradlew
+      ./gradlew --version
+
+  - name: Create Git History Reports
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      mkdir -p documentation-reports/git-history
+      mkdir -p documentation-reports/source-inventory
+
+      git log --reverse --date=iso-strict \
+        --format='Commit: %H%nParents: %P%nAuthor: %an <%ae>%nDate: %ad%nSubject: %s%nBody:%n%b%n---' \
+        > documentation-reports/git-history/all-commits.txt
+
+      git log --reverse --stat \
+        --date=iso-strict \
+        --format='COMMIT %H%nDATE %ad%nAUTHOR %an%nSUBJECT %s' \
+        > documentation-reports/git-history/commit-change-summary.txt
+
+      git log --reverse --name-status \
+        --format='COMMIT %H%nDATE %aI%nSUBJECT %s' \
+        > documentation-reports/git-history/file-change-history.txt
+
+      git log --reverse --format='%H' \
+        > documentation-reports/git-history/commit-hashes.txt
+
+      git shortlog -sne --all \
+        > documentation-reports/git-history/contributors.txt
+
+      git log -1 --format='Latest commit: %H%nDate: %aI%nSubject: %s' \
+        > documentation-reports/git-history/latest-commit.txt
+
+      git rev-list --max-parents=0 HEAD \
+        > documentation-reports/git-history/root-commits.txt
+
+      git status --short \
+        > documentation-reports/git-history/working-tree-status.txt
+
+      git ls-files \
+        > documentation-reports/source-inventory/tracked-files.txt
+
+      git ls-files '*.kt' '*.java' '*.kts' '*.gradle' '*.xml' '*.toml' \
+        > documentation-reports/source-inventory/source-files.txt
+
+      git ls-files '*.kt' '*.java' \
+        > documentation-reports/source-inventory/kotlin-java-files.txt
+
+      git ls-files '*.yml' '*.yaml' \
+        > documentation-reports/source-inventory/workflow-files.txt
+
+      {
+        echo "# Repository Documentation Report"
+        echo
+        echo "- Repository: $GITHUB_REPOSITORY"
+        echo "- Branch/ref: $GITHUB_REF"
+        echo "- HEAD: $(git rev-parse HEAD)"
+        echo "- First reachable root commit(s):"
+        git rev-list --max-parents=0 HEAD
+        echo "- Reachable commit count: $(git rev-list --count HEAD)"
+        echo "- Generated at (UTC): $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+      } > documentation-reports/README.md
+
+  - name: Discover Dokka HTML Tasks
+    id: discover
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      ./gradlew tasks --all --console=plain \
+        > /tmp/gradle-tasks.txt
+
+      python3 - <<'PY'
+      import re
+
+      text = open("/tmp/gradle-tasks.txt", encoding="utf-8").read()
+      tasks = set()
+
+      for line in text.splitlines():
+          match = re.match(
+              r"^\s*((?::[A-Za-z0-9_.-]+)*:?(?:dokkaHtmlMultiModule|dokkaHtml))\s+-",
+              line
+          )
+          if match:
+              tasks.add(match.group(1))
+
+      tasks = sorted(tasks)
+
+      with open("/tmp/dokka-tasks.txt", "w", encoding="utf-8") as f:
+          f.write("\n".join(tasks))
+
+      print("Discovered Dokka HTML tasks:")
+      print("\n".join(tasks) if tasks else "No Dokka HTML tasks found.")
+      PY
+
+      if [ ! -s /tmp/dokka-tasks.txt ]; then
+        echo "::error::No Dokka HTML tasks found. Ensure the Dokka Gradle plugin is configured in the repository."
+        echo "See documentation-reports/gradle-tasks.txt in the workflow logs if available."
+        exit 1
+      fi
+
+      {
+        echo "tasks<<EOF"
+        cat /tmp/dokka-tasks.txt
+        echo
+        echo "EOF"
+      } >> "$GITHUB_OUTPUT"
+
+      cp /tmp/gradle-tasks.txt documentation-reports/gradle-tasks.txt
+
+  - name: Generate Dokka HTML Documentation
+    shell: bash
+    env:
+      DOKKA_TASKS: ${{ steps.discover.outputs.tasks }}
+    run: |
+      set -euo pipefail
+
+      mapfile -t tasks <<< "$DOKKA_TASKS"
+
+      echo "Running only discovered Dokka HTML tasks:"
+      printf '  %s\n' "${tasks[@]}"
+
+      ./gradlew "${tasks[@]}" \
+        --no-daemon \
+        --stacktrace \
+        --continue
+
+  - name: Collect Generated Dokka Files
+    if: always()
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      mkdir -p documentation-reports/dokka-html
+
+      # Copy generated HTML documentation while preserving module paths.
+      find . \
+        -type d \( -path '*/.gradle' -o -path '*/.git' \) -prune -o \
+        -type d -path '*/build/dokka*' -print \
+        > /tmp/dokka-directories.txt
+
+      while IFS= read -r dir; do
+        [ -d "$dir" ] || continue
+
+        destination="documentation-reports/dokka-html/${dir#./}"
+        mkdir -p "$destination"
+        cp -a "$dir/." "$destination/"
+      done < /tmp/dokka-directories.txt
+
+      find documentation-reports -type f \
+        | sort \
+        > documentation-reports/generated-file-list.txt
+
+      echo "Generated report files:"
+      cat documentation-reports/generated-file-list.txt
+
+  - name: Upload Dokka and Git History Artifacts
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: cloudstream-dokka-full-documentation-${{ github.run_number }}
+      path: documentation-reports/
+      if-no-files-found: warn
+      retention-days: 30
+      compression-level: 6
+
+  - name: Upload Original Dokka Output Directories
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: cloudstream-dokka-generated-output-${{ github.run_number }}
+      path: |
+        **/build/dokka/**
+        **/build/dokka-*/
+      if-no-files-found: warn
+      retention-days: 30
+      compression-level: 6
