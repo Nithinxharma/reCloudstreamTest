@@ -1,74 +1,79 @@
-name: Dokka
+name: Dokka Documentation Artifact
 
 on:
-  push:
-    branches: [ master ]
-    paths-ignore:
-      - '*.md'
+workflow_dispatch:
+push:
+branches:
+- master
+- main
+paths:
+- '.kt'
+- '.kts'
+- '.java'
+- '.xml'
+- '.md'
+- 'gradle/'
+- 'gradlew'
+- 'gradlew.bat'
+- 'settings.gradle*'
+- 'build.gradle*'
+- '.github/workflows/dokka-docs.yml'
 
 permissions:
-  contents: read
+contents: read
 
 concurrency:
-  group: "dokka"
-  cancel-in-progress: true
+group: dokka-docs-${{ github.ref }}
+cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate access token
-        id: generate_token
-        uses: tibdex/github-app-token@v2
-        with:
-          app_id: ${{ secrets.GH_APP_ID }}
-          private_key: ${{ secrets.GH_APP_KEY }}
-          repository: "recloudstream/dokka"
+generate-dokka:
+name: Generate CloudStream Dokka HTML
+runs-on: ubuntu-latest
+timeout-minutes: 60
 
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          path: "src"
+steps:
+  - name: Checkout CloudStream
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
 
-      - name: Checkout dokka
-        uses: actions/checkout@v6
-        with:
-          repository: "recloudstream/dokka"
-          path: "dokka"
-          token: ${{ steps.generate_token.outputs.token }}
+  - name: Set up JDK 17
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Clean old builds
-        run: |
-          cd $GITHUB_WORKSPACE/dokka/
-          rm -rf "./app"
-          rm -rf "./library"
+  - name: Set up Gradle
+    uses: gradle/actions/setup-gradle@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
+  - name: Verify Gradle Wrapper
+    run: |
+      test -f gradlew || {
+        echo "::error::Gradle wrapper not found"
+        exit 1
+      }
+      chmod +x gradlew
+      ./gradlew --version
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-        with:
-          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+  - name: Generate Dokka HTML
+    run: |
+      ./gradlew docs:dokkaGeneratePublicationHtml \
+        --no-daemon \
+        --stacktrace
 
-      - name: Generate Dokka
-        run: |
-          cd $GITHUB_WORKSPACE/src/
-          chmod +x gradlew
-          ./gradlew docs:dokkaGeneratePublicationHtml
+  - name: Inspect Generated Documentation
+    if: always()
+    run: |
+      echo "Searching for generated Dokka files..."
+      find docs/build/dokka -maxdepth 6 -type f 2>/dev/null | head -200 || true
 
-      - name: Copy Dokka
-        run: cp -r $GITHUB_WORKSPACE/src/docs/build/dokka/html/* $GITHUB_WORKSPACE/dokka/
-
-      - name: Push builds
-        run: |
-          cd $GITHUB_WORKSPACE/dokka
-          touch .nojekyll
-          git config --local user.email "111277985+recloudstream[bot]@users.noreply.github.com"
-          git config --local user.name "recloudstream[bot]"
-          git add .
-          git commit --amend -m "Generate dokka for recloudstream/cloudstream@${GITHUB_SHA}" || exit 0   # do not error if nothing to commit
-          git push --force
+  - name: Upload Dokka HTML Artifact
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: cloudstream-dokka-html-${{ github.run_number }}
+      path: docs/build/dokka/html/
+      if-no-files-found: warn
+      retention-days: 30
+      compression-level: 6

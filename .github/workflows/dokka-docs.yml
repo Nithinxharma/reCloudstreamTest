@@ -1,9 +1,3 @@
-CloudStream Dokka Documentation Workflow
-
-Generates HTML API documentation and Git history reports only.
-
-Does not build APKs, AARs, or publish releases.
-
 name: Dokka Full Documentation
 
 on:
